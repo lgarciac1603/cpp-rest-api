@@ -31,7 +31,8 @@
 *.out
 *.app
 
-# configurations
+# configurations and other files
 src/config/config.h
-
 /build
+.vscode/
+.vscode/*
