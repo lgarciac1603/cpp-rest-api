@@ -11,6 +11,8 @@ class UserRepository {
 
     vector<User> findAll();
     optional<User> findById(int id);
+    optional<User> findByUsername(const string& username);
+    optional<User> authenticate(const string& username, const string& password);
 
     bool create(const string& username, const string& email, const string& password_hash);
     bool update(int id, const string& email);

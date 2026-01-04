@@ -4,5 +4,6 @@
 
 #include "third_party/httplib.h"
 #include "../db/connection.h"
+#include "../utils/session_manager.h"
 
-void register_user_routes(httplib::Server& api, DBConnection& db);
+void register_user_routes(httplib::Server& api, DBConnection& db, SessionManager& session_mgr);
