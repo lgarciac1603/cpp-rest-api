@@ -1,0 +1,145 @@
+# CPP REST API
+
+A simple and minimalist REST API built in C++ for managing users and sessions. It uses PostgreSQL as the database, httplib for the HTTP server, and JWT for authentication. Now includes full authentication with login, logout, refresh tokens, and user sessions.
+
+## Features
+
+- **User CRUD**: Create, read, update, and delete users.
+- **JWT Authentication**: Login, logout, refresh tokens, and `/me` endpoint with secure token management.
+- **Database**: PostgreSQL with SQL migrations, including tables for users and refresh tokens.
+- **Containerization**: Docker Compose for PostgreSQL.
+
+## Prerequisites
+
+- **Operating System**: Windows 10 or higher (code is configured for Windows).
+- **C++ Compiler**: g++ (MinGW) or Visual Studio with C++17 support.
+- **PostgreSQL**: Development client (libpq). Install PostgreSQL or use vcpkg.
+- **Dependencies**:
+  - httplib (included in `third_party/httplib.h`).
+  - jwt-cpp: For JWT. Download from [GitHub](https://github.com/Thalhammer/jwt-cpp) and place headers in `third_party/jwt-cpp/` or adjust include paths.
+  - OpenSSL: For hashing. Install via vcpkg: `vcpkg install openssl`.
+  - Docker and Docker Compose: For the database.
+- **Tools**: Git, CMake (optional, but recommended for builds).
+
+## Installation
+
+1. **Clone the repository**:
+
+   ```bash
+   git clone https://github.com/lgarciac1603/cpp-rest-api.git
+   cd cpp-rest-api
+   ```
+
+2. **Install dependencies with vcpkg** (recommended):
+   - Install vcpkg if you don't have it: `git clone https://github.com/Microsoft/vcpkg.git && cd vcpkg && bootstrap-vcpkg.bat`.
+   - Install packages: `.\vcpkg install libpq openssl`.
+   - Integrate vcpkg: `.\vcpkg integrate install`.
+   - For jwt-cpp: Download from [GitHub](https://github.com/Thalhammer/jwt-cpp/releases), extract, and copy `include/jwt-cpp/` to your project's `third_party/jwt-cpp/` directory. The compilation commands below are already configured to include this path.
+
+3. **Set up Docker**:
+   - Ensure Docker Desktop is installed and running.
+   - The `docker-compose.yml` configures PostgreSQL automatically.
+
+## Configuration
+
+1. **Database**:
+   - Start PostgreSQL: `docker-compose up -d`.
+   - Connect to the DB (user: `apiuser_test`, password: `apipass_test`, DB: `apidb`, port: 5432).
+   - Run migrations in order:
+     ```sql
+     -- Connect via psql or tool like pgAdmin
+     \i database/migrations/001-init.sql
+     \i database/migrations/002-triggers.sql
+     \i database/migrations/003-users-population.sql
+     \i database/migrations/004-refresh-tokens.sql
+     ```
+
+     - The new migration `004-refresh-tokens.sql` adds the table for secure token storage.
+
+2. **App Configuration**:
+   - Edit `src/config/config.h` to adjust settings (e.g., server port, JWT secret).
+   - The JWT secret is hardcoded in `auth_routes.cpp` as `"your-secret-key"` – change it in production.
+
+## Compilation
+
+1. **Using CMake** (recommended):
+   - Create build directory: `mkdir build && cd build`.
+   - Configure: `cmake .. -DCMAKE_TOOLCHAIN_FILE=C:/path/to/vcpkg/scripts/buildsystems/vcpkg.cmake`.
+   - Build: `cmake --build . --config Release`.
+   - Note: Ensure jwt-cpp headers are in `third_party/jwt-cpp` or add custom find_package for it.
+
+2. **Manual Compilation** (without CMake):
+   - Compile with g++:
+
+     ```bash
+     g++ -std=c++17 -o api.exe src/main.cpp src/db/connection.cpp src/repositories/user_repository.cpp src/repositories/refresh_token_repository.cpp src/routes/user_routes.cpp src/routes/auth_routes.cpp src/utils/hash.cpp src/utils/session_manager.cpp -Ithird_party -Ithird_party/jwt-cpp -Iinclude -lpq -lssl -lcrypto -lws2_32
+     ```
+
+     - Adjust paths according to your vcpkg installation (e.g., `-I C:/vcpkg/installed/x64-windows/include`) and jwt-cpp location.
+
+3. **Notes**:
+   - If using Visual Studio, create a project and add the source files.
+   - Resolve linking errors by adding PostgreSQL and OpenSSL libs.
+
+## Execution
+
+1. **Start the DB**: `docker-compose up -d` (if not running).
+2. **Run the app**: `./api.exe` (or `api.exe` on Windows).
+3. **Verify**: The server listens on `http://localhost:8080`. Logs will appear in the console.
+
+## Usage
+
+### User Endpoints
+
+- `GET /users`: List all users (returns JSON).
+- `GET /users/{id}`: Get a user by ID.
+- `POST /users`: Create user (body: `username`, `email`, `password`).
+- `PUT /users/{id}`: Update email (body: `email`).
+- `DELETE /users/{id}`: Delete user.
+
+### Authentication Endpoints
+
+- `POST /sessions`: Login (body: `email`, `password`) → Returns `access_token` and `refresh_token`.
+- `GET /me`: Current user (header: `Authorization: Bearer <access_token>`).
+- `DELETE /sessions`: Logout (body: `refresh_token`).
+- `POST /sessions/refresh`: Refresh token (body: `refresh_token`) → New `access_token`.
+
+### Usage Example
+
+```bash
+# Create user
+curl -X POST http://localhost:8080/users -d "username=test&email=test@example.com&password=123456"
+
+# Login
+curl -X POST http://localhost:8080/sessions -d "email=test@example.com&password=123456"
+
+# Get user (use token from login)
+curl -H "Authorization: Bearer <token>" http://localhost:8080/me
+```
+
+## Development
+
+- **Project Structure**:
+  - `src/`: Source code (now includes `auth_routes.cpp`, `refresh_token_repository.cpp`, and updated models).
+  - `database/`: Migrations and seeds (added `004-refresh-tokens.sql`).
+  - `build/`: Build files.
+- **Adding New Routes**: Edit `routes/` and register in `main.cpp`.
+- **Tests**: Not included; add unit tests with Google Test.
+
+## Contributing
+
+1. Fork the repo.
+2. Create a branch: `git checkout -b feature/new-feature`.
+3. Commit: `git commit -m "Add new feature"`.
+4. Push: `git push origin feature/new-feature`.
+5. Open a PR.
+
+## License
+
+MIT License. See `LICENSE`.
+
+## Notes
+
+- This project is educational and minimalist. For production, add rate limiting, robust validations, and use HTTPS.
+- If you encounter issues, check console logs or DB connections.
+- jwt-cpp is installed manually in `third_party/jwt-cpp/`; ensure the headers are present before compiling.

@@ -8,7 +8,7 @@ UserRepository::UserRepository(PGconn* c) : conn(c) {}
 
 vector<User> UserRepository::findAll() {
   vector<User> users;
-  PGresult* r = PQexec(conn, "SELECT id, username, email FROM users ORDER BY id");
+  PGresult* r = PQexec(conn, "SELECT id, username, email, password_hash FROM users ORDER BY id");
 
   if (PQresultStatus(r) != PGRES_TUPLES_OK) {
     PQclear(r);
@@ -20,7 +20,8 @@ vector<User> UserRepository::findAll() {
     users.push_back({
       stoi(PQgetvalue(r, i, 0)),
       PQgetvalue(r, i, 1),
-      PQgetvalue(r, i, 2)
+      PQgetvalue(r, i, 2),
+      PQgetvalue(r, i, 3)
     });
   }
   
@@ -33,7 +34,7 @@ optional<User> UserRepository::findById(int id) {
 
   PGresult* r = PQexecParams(
     conn,
-    "SELECT id, username, email FROM users WHERE id=$1",
+    "SELECT id, username, email, password_hash FROM users WHERE id=$1",
     1, nullptr, params, nullptr, nullptr, 0
   );
 
@@ -45,7 +46,8 @@ optional<User> UserRepository::findById(int id) {
   User u {
     stoi(PQgetvalue(r, 0, 0)),
       PQgetvalue(r, 0, 1),
-      PQgetvalue(r, 0, 2)
+      PQgetvalue(r, 0, 2),
+      PQgetvalue(r, 0, 3)
     };
 
   PQclear(r);
@@ -57,7 +59,7 @@ optional<User> UserRepository::findByUsername(const string& username) {
 
   PGresult* r = PQexecParams(
     conn,
-    "SELECT id, username, email FROM users WHERE username=$1",
+    "SELECT id, username, email, password_hash FROM users WHERE username=$1",
     1, nullptr, params, nullptr, nullptr, 0
   );
 
@@ -69,7 +71,33 @@ optional<User> UserRepository::findByUsername(const string& username) {
   User u {
     stoi(PQgetvalue(r, 0, 0)),
     PQgetvalue(r, 0, 1),
-    PQgetvalue(r, 0, 2)
+    PQgetvalue(r, 0, 2),
+    PQgetvalue(r, 0, 3)
+  };
+
+  PQclear(r);
+  return u;
+}
+
+optional<User> UserRepository::findByEmail(const string& email) {
+  const char* params[1] = { email.c_str() };
+
+  PGresult* r = PQexecParams(
+    conn,
+    "SELECT id, username, email, password_hash FROM users WHERE email=$1",
+    1, nullptr, params, nullptr, nullptr, 0
+  );
+
+  if (PQresultStatus(r) != PGRES_TUPLES_OK || PQntuples(r) == 0) {
+    PQclear(r);
+    return nullopt;
+  }
+
+  User u {
+    stoi(PQgetvalue(r, 0, 0)),
+    PQgetvalue(r, 0, 1),
+    PQgetvalue(r, 0, 2),
+    PQgetvalue(r, 0, 3)
   };
 
   PQclear(r);

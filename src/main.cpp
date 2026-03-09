@@ -4,6 +4,7 @@
 #include "db/connection.h"
 #include "third_party/httplib.h"
 #include "routes/user_routes.h"
+#include "routes/auth_routes.h"
 #include "utils/console-colors.h"
 #include "utils/session_manager.h"
 
@@ -44,6 +45,7 @@ int main() {
   httplib::Server api;
   SessionManager session_mgr;
   register_user_routes(api, db, session_mgr);
+  register_auth_routes(api, db, session_mgr);
 
   cout << COLOR_GREEN
     << "API listening on http://localhost:8080"
