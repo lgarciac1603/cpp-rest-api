@@ -9,11 +9,11 @@ using namespace std;
 DBConnection::DBConnection() :conn(nullptr) {
   stringstream ss;
 
-  ss  << "host=" << DB_HOST
-      << " port=" << DB_PORT
-      << " dbname=" << DB_NAME
-      << " user=" << DB_USER
-      << " password=" << DB_PASS;
+  ss << "host=" << DB_HOST
+    << " port=" << DB_PORT
+    << " dbname=" << DB_NAME
+    << " user=" << DB_USER
+    << " password=" << DB_PASS;
 
   conn = PQconnectdb(ss.str().c_str());
 

@@ -3,13 +3,13 @@
 #include <libpq-fe.h>
 
 class DBConnection {
-public:
+  public:
     DBConnection();
     ~DBConnection(); // constructor
 
     bool isConnected() const;
     PGconn* get();
 
-private:
+  private:
     PGconn* conn;
 };
