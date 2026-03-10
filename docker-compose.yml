@@ -14,5 +14,19 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
+  api:
+    build: .
+    container_name: cpp-rest-api
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=apiuser_test
+      - DB_PASSWORD=apipass_test
+      - DB_NAME=apidb
+
 volumes:
   pgdata:

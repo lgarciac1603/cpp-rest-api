@@ -46,6 +46,7 @@ A simple and minimalist REST API built in C++ for managing users and sessions. I
    - Start PostgreSQL: `docker-compose up -d`.
    - Connect to the DB (user: `apiuser_test`, password: `apipass_test`, DB: `apidb`, port: 5432).
    - Run migrations in order:
+
      ```sql
      -- Connect via psql or tool like pgAdmin
      \i database/migrations/001-init.sql
@@ -62,13 +63,17 @@ A simple and minimalist REST API built in C++ for managing users and sessions. I
 
 ## Compilation
 
-1. **Using CMake** (recommended):
+1. **Using Docker** (recommended for easy setup):
+   - Build and run with Docker Compose: `docker-compose up --build`.
+   - This will compile the app inside a container, start PostgreSQL, and run the API on `http://localhost:8080`.
+
+2. **Using CMake** (recommended for local development):
    - Create build directory: `mkdir build && cd build`.
    - Configure: `cmake .. -DCMAKE_TOOLCHAIN_FILE=C:/path/to/vcpkg/scripts/buildsystems/vcpkg.cmake`.
    - Build: `cmake --build . --config Release`.
    - Note: Ensure jwt-cpp headers are in `third_party/jwt-cpp` or add custom find_package for it.
 
-2. **Manual Compilation** (without CMake):
+3. **Manual Compilation** (without CMake):
    - Compile with g++:
 
      ```bash
@@ -77,14 +82,16 @@ A simple and minimalist REST API built in C++ for managing users and sessions. I
 
      - Adjust paths according to your vcpkg installation (e.g., `-I C:/vcpkg/installed/x64-windows/include`) and jwt-cpp location.
 
-3. **Notes**:
+4. **Notes**:
    - If using Visual Studio, create a project and add the source files.
    - Resolve linking errors by adding PostgreSQL and OpenSSL libs.
 
 ## Execution
 
-1. **Start the DB**: `docker-compose up -d` (if not running).
-2. **Run the app**: `./api.exe` (or `api.exe` on Windows).
+1. **With Docker**: `docker-compose up --build` (builds and runs everything).
+2. **Manual**:
+   - Start the DB: `docker-compose up -d postgres` (if not using full compose).
+   - Run the app: `./api.exe` (or `api.exe` on Windows).
 3. **Verify**: The server listens on `http://localhost:8080`. Logs will appear in the console.
 
 ## Usage
@@ -143,3 +150,4 @@ MIT License. See `LICENSE`.
 - This project is educational and minimalist. For production, add rate limiting, robust validations, and use HTTPS.
 - If you encounter issues, check console logs or DB connections.
 - jwt-cpp is installed manually in `third_party/jwt-cpp/`; ensure the headers are present before compiling.
+- The Docker container for the app is named `cpp-rest-api` and connects to the `postgres` container for the database.
