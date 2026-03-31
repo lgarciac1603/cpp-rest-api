@@ -77,10 +77,11 @@ A simple and minimalist REST API built in C++ for managing users and sessions. I
    - Compile with g++:
 
      ```bash
-     g++ -std=c++17 -o api.exe src/main.cpp src/db/connection.cpp src/repositories/user_repository.cpp src/repositories/refresh_token_repository.cpp src/routes/user_routes.cpp src/routes/auth_routes.cpp src/utils/hash.cpp src/utils/session_manager.cpp -Ithird_party -Ithird_party/jwt-cpp -Iinclude -lpq -lssl -lcrypto -lws2_32
+     g++ -std=c++17 -o build/api.exe src/main.cpp src/db/connection.cpp src/repositories/user_repository.cpp src/repositories/refresh_token_repository.cpp src/routes/user_routes.cpp src/routes/auth_routes.cpp src/utils/hash.cpp src/utils/session_manager.cpp -Isrc/third_party -Isrc/third_party/jwt-cpp -Isrc/config -lpq -lssl -lcrypto -lws2_32
      ```
 
      - Adjust paths according to your vcpkg installation (e.g., `-I C:/vcpkg/installed/x64-windows/include`) and jwt-cpp location.
+      - **Important**: Include the JWT traits header in files using JWT functions: `#include <jwt-cpp/traits/nlohmann-json/traits.h>` to avoid template deduction errors.
 
 4. **Notes**:
    - If using Visual Studio, create a project and add the source files.

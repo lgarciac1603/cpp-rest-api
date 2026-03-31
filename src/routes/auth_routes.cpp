@@ -4,7 +4,10 @@
 #include "../repositories/user_repository.h"
 #include "../repositories/refresh_token_repository.h"
 #include "../utils/hash.h"
+#define JWT_DISABLE_PICOJSON
+#include <nlohmann/json.hpp>
 #include <jwt-cpp/jwt.h>
+#include <jwt-cpp/traits/nlohmann-json/traits.h>
 #include <chrono>
 #include <sstream>
 
@@ -16,7 +19,7 @@ string generate_access_token(int user_id, const string& secret) {
     auto now = chrono::system_clock::now();
     auto exp = now + chrono::hours(1);  // 1 hora
 
-    return jwt::create()
+    return jwt::create<jwt::traits::nlohmann_json>()
         .set_issuer("cpp-api")
         .set_subject(to_string(user_id))
         .set_issued_at(now)
@@ -31,8 +34,8 @@ string generate_refresh_token() {
 
 int get_user_id_from_token(const string& token, const string& secret) {
     try {
-        auto decoded = jwt::decode(token);
-        auto verifier = jwt::verify()
+        auto decoded = jwt::decode<jwt::traits::nlohmann_json>(token);
+        auto verifier = jwt::verify<jwt::traits::nlohmann_json>()
             .with_issuer("cpp-api")
             .allow_algorithm(jwt::algorithm::hs256{secret});
 

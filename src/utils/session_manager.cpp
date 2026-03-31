@@ -18,7 +18,11 @@ string generate_random_token() {
   stringstream ss;
 
   for (char c : bytes) {
-    ss << hex << setw(2) << setfill('0') << static_cast<int>(static_cast<unsigned char>(c));
+    ss <<
+    hex <<
+    setw(2) <<
+    setfill('0') <<
+    static_cast<int>(static_cast<unsigned char>(c));
   }
 
   return ss.str();
