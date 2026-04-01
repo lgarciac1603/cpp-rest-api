@@ -3,6 +3,7 @@
 #include "auth_routes.h"
 #include "../repositories/user_repository.h"
 #include "../repositories/refresh_token_repository.h"
+#include "../config/config.h"
 #include "../utils/hash.h"
 #include "../utils/cors.h"
 #define JWT_DISABLE_PICOJSON
@@ -48,7 +49,7 @@ int get_user_id_from_token(const string& token, const string& secret) {
 }
 
 void register_auth_routes(httplib::Server& api, DBConnection& db, SessionManager& session_mgr) {
-  string jwt_secret = "your-secret-key";  // Mover a config
+  string jwt_secret = JWT_SECRET;
 
   // POST /sessions (login)
   api.Post("/sessions", [&](const httplib::Request& req, httplib::Response& res) {

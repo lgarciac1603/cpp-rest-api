@@ -1,7 +1,9 @@
 #define _WIN32_WINNT 0x0A00
 
 #include <iostream>
+#include <cstdlib>
 #include "db/connection.h"
+#include "config/config.h"
 #include "third_party/httplib.h"
 #include "routes/user_routes.h"
 #include "routes/auth_routes.h"
@@ -51,11 +53,16 @@ int main() {
   // Setup CORS
   CORS::handle_preflight(api);
 
+  int app_port = std::atoi(APP_PORT);
+  if (app_port <= 0) {
+    app_port = 8080;
+  }
+
   cout << COLOR_GREEN
-    << "API listening on http://localhost:8080"
+    << "API listening on http://localhost:" << app_port
     << COLOR_RESET << "\n";
 
-  api.listen("0.0.0.0", 8080);
+  api.listen("0.0.0.0", app_port);
 
   return 0;
 }

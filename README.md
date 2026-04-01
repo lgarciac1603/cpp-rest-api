@@ -69,8 +69,17 @@ A simple and minimalist REST API built in C++ for managing users and sessions. I
    - Note: `docker-entrypoint.sh` checks for these vars before running migrations.
 
 2. **App Configuration**:
-   - Edit `src/config/config.h` to adjust settings (e.g., server port, JWT secret).
-   - The JWT secret is hardcoded in `auth_routes.cpp` as `"your-secret-key"` – change it in production.
+   - Main settings are now environment variables:
+     - `APP_PORT` (default: `8080`)
+     - `JWT_SECRET` (default: `dev-secret-key`)
+     - `CORS_ALLOW_ORIGIN` (default: `*`)
+   - DB variables remain: `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASS`.
+   - For frontend development (e.g. `http://localhost:5173`), set:
+
+     ```yaml
+     environment:
+       - CORS_ALLOW_ORIGIN=http://localhost:5173
+     ```
 
 ## Compilation
 
@@ -123,6 +132,19 @@ A simple and minimalist REST API built in C++ for managing users and sessions. I
    - Start the DB: `docker-compose up -d postgres` (if not using full compose).
    - Run the app: `./api.exe` (or `api.exe` on Windows).
 3. **Verify**: The server listens on `http://localhost:8080`. Logs will appear in the console.
+
+### Minimal Frontend Setup (Dev)
+
+Use this environment in `docker-compose.yml` for common local frontend stacks:
+
+```yaml
+environment:
+  - APP_PORT=8080
+  - CORS_ALLOW_ORIGIN=http://localhost:5173
+  - JWT_SECRET=dev-secret-key
+```
+
+Then point your frontend API base URL to `http://localhost:8080`.
 
 ## Usage
 
