@@ -25,8 +25,9 @@ services:
       - DB_HOST=postgres
       - DB_PORT=5432
       - DB_USER=apiuser_test
-      - DB_PASSWORD=apipass_test
+      - DB_PASS=apipass_test
       - DB_NAME=apidb
+    restart: unless-stopped
 
 volumes:
   pgdata:

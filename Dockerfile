@@ -10,8 +10,9 @@ RUN apt-get update && apt-get install -y \
     cmake \
     git \
     libpq-dev \
+    libpq5 \
+    postgresql-client \
     libssl-dev \
-    libcrypto++-dev \
     wget \
     unzip \
     && rm -rf /var/lib/apt/lists/*
@@ -29,13 +30,18 @@ WORKDIR /app
 # Copy source code
 COPY . .
 
-# Create build directory
+# Create build directory and compile
 RUN mkdir build && cd build && \
     cmake .. && \
     make
 
+# Copy entrypoint script
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
 # Expose port
 EXPOSE 8080
 
-# Run the app (assuming DB is connected via docker-compose)
-CMD ["./build/api"]
+# Start with entrypoint script
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+CMD ["/app/build/api"]
