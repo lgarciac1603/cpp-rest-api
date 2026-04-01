@@ -1,6 +1,6 @@
 # CPP REST API
 
-A simple and minimalist REST API built in C++ for managing users and sessions. It uses PostgreSQL as the database, httplib for the HTTP server, and JWT for authentication. Now includes full authentication with login, logout, refresh tokens, and user sessions.
+A simple and minimalist REST API built in C++ for managing users and sessions. It uses PostgreSQL as the database, httplib for the HTTP server, and JWT for authentication. Includes full authentication with login, logout, refresh tokens, and user sessions.
 
 ## Features
 
@@ -19,7 +19,7 @@ A simple and minimalist REST API built in C++ for managing users and sessions. I
   - jwt-cpp: For JWT. Download from [GitHub](https://github.com/Thalhammer/jwt-cpp) and place headers in `third_party/jwt-cpp/` or adjust include paths.
   - OpenSSL: For hashing. Install via vcpkg: `vcpkg install openssl`.
   - Docker and Docker Compose: For the database.
-- **Tools**: Git, CMake (optional, but recommended for builds).
+- **Tools**: Git, Docker (optional, for containerized builds).
 
 ## Installation
 
@@ -34,7 +34,6 @@ A simple and minimalist REST API built in C++ for managing users and sessions. I
    - Install vcpkg if you don't have it: `git clone https://github.com/Microsoft/vcpkg.git && cd vcpkg && bootstrap-vcpkg.bat`.
    - Install packages: `.\vcpkg install libpq openssl`.
    - Integrate vcpkg: `.\vcpkg integrate install`.
-   - For jwt-cpp: Download from [GitHub](https://github.com/Thalhammer/jwt-cpp/releases), extract, and copy `include/jwt-cpp/` to your project's `third_party/jwt-cpp/` directory. The compilation commands below are already configured to include this path.
 
 3. **Set up Docker**:
    - Ensure Docker Desktop is installed and running.
@@ -57,34 +56,65 @@ A simple and minimalist REST API built in C++ for managing users and sessions. I
 
      - The new migration `004-refresh-tokens.sql` adds the table for secure token storage.
 
+   - If you get `Missing DB env vars...`, do:
+     1. `docker-compose down -v` to clean old containers/volumes.
+     2. `docker-compose up --build`.
+     3. Verify with `docker-compose logs api --tail=50`; should show:
+        - `DB_HOST: postgres`
+        - `DB_PORT: 5432`
+        - `DB_USER: apiuser_test`
+        - `DB_PASS: apipass_test`
+        - `DB_NAME: apidb`
+
+   - Note: `docker-entrypoint.sh` checks for these vars before running migrations.
+
 2. **App Configuration**:
    - Edit `src/config/config.h` to adjust settings (e.g., server port, JWT secret).
    - The JWT secret is hardcoded in `auth_routes.cpp` as `"your-secret-key"` – change it in production.
 
 ## Compilation
 
-1. **Using Docker** (recommended for easy setup):
-   - Build and run with Docker Compose: `docker-compose up --build`.
-   - This will compile the app inside a container, start PostgreSQL, and run the API on `http://localhost:8080`.
-
-2. **Using CMake** (recommended for local development):
-   - Create build directory: `mkdir build && cd build`.
-   - Configure: `cmake .. -DCMAKE_TOOLCHAIN_FILE=C:/path/to/vcpkg/scripts/buildsystems/vcpkg.cmake`.
-   - Build: `cmake --build . --config Release`.
-   - Note: Ensure jwt-cpp headers are in `third_party/jwt-cpp` or add custom find_package for it.
-
-3. **Manual Compilation** (without CMake):
-   - Compile with g++:
-
+1. **Using Docker** (recommended for production-like deployment):
+   - Make sure `Docker` and `docker-compose` are installed.
+   - Run:
      ```bash
-     g++ -std=c++17 -o api.exe src/main.cpp src/db/connection.cpp src/repositories/user_repository.cpp src/repositories/refresh_token_repository.cpp src/routes/user_routes.cpp src/routes/auth_routes.cpp src/utils/hash.cpp src/utils/session_manager.cpp -Ithird_party -Ithird_party/jwt-cpp -Iinclude -lpq -lssl -lcrypto -lws2_32
+     docker-compose up --build
+     ```
+   - This creates 2 containers:
+     - `postgres_minimal`: PostgreSQL 16 with persistent volume (`pgdata`).
+     - `cpp-rest-api`: app built from `Dockerfile`.
+   - `docker-entrypoint.sh` waits for PostgreSQL, applies migrations from `database/migrations/*.sql`, and starts `./build/api`.
+   - API is available at `http://localhost:8080`.
+
+2. **Direct Docker use (without `docker-compose`)**:
+   - Build image:
+     ```bash
+     docker build -t cpp-rest-api .
+     ```
+   - Start PostgreSQL:
+     ```bash
+     docker run -d --name postgres_minimal -e POSTGRES_USER=apiuser_test -e POSTGRES_PASSWORD=apipass_test -e POSTGRES_DB=apidb -p 5432:5432 -v pgdata:/var/lib/postgresql/data postgres:16
+     ```
+   - Run the app:
+     ```bash
+     docker run --rm --name cpp-rest-api \
+       --link postgres_minimal:postgres \
+       -e DB_HOST=postgres -e DB_PORT=5432 -e DB_NAME=apidb -e DB_USER=apiuser_test -e DB_PASS=apipass_test \
+       -p 8080:8080 cpp-rest-api
      ```
 
-     - Adjust paths according to your vcpkg installation (e.g., `-I C:/vcpkg/installed/x64-windows/include`) and jwt-cpp location.
+3. **Using g++ (Windows with MinGW/MSYS2)**:
+   - Create build folder: `mkdir build`.
+   - Compile:
+     ```bash
+     g++ -std=c++17 -o build/api.exe src/main.cpp src/db/connection.cpp src/repositories/user_repository.cpp src/repositories/refresh_token_repository.cpp src/routes/user_routes.cpp src/routes/auth_routes.cpp src/utils/hash.cpp src/utils/session_manager.cpp -Isrc/third_party -Isrc/third_party/jwt-cpp -Isrc/config -lpq -lssl -lcrypto -lws2_32
+     ```
+   - Adjust include/lib paths according to your `vcpkg` installation.
+   - Ensure dependency: `third_party/nlohmann/json.hpp` and `jwt-cpp` exist in `third_party/jwt-cpp`.
 
-4. **Notes**:
-   - If using Visual Studio, create a project and add the source files.
-   - Resolve linking errors by adding PostgreSQL and OpenSSL libs.
+- **Note**: for manual mode, ensure in `auth_routes.cpp`:
+  - `#include <nlohmann/json.hpp>`
+  - `#define JWT_DISABLE_PICOJSON` (already applied in this repo).
 
 ## Execution
 

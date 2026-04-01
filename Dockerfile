@@ -10,18 +10,17 @@ RUN apt-get update && apt-get install -y \
     cmake \
     git \
     libpq-dev \
+    libpq5 \
+    postgresql-client \
     libssl-dev \
-    libcrypto++-dev \
     wget \
     unzip \
     && rm -rf /var/lib/apt/lists/*
 
 # Download and install jwt-cpp headers
-RUN mkdir -p /usr/local/include/jwt-cpp && \
-    wget -q https://github.com/Thalhammer/jwt-cpp/releases/latest/download/jwt-cpp-0.7.2.zip -O /tmp/jwt-cpp.zip && \
-    unzip /tmp/jwt-cpp.zip -d /tmp && \
-    cp -r /tmp/jwt-cpp-0.7.2/include/jwt-cpp/* /usr/local/include/jwt-cpp/ && \
-    rm -rf /tmp/jwt-cpp*
+RUN git clone --depth 1 --branch v0.7.0 https://github.com/Thalhammer/jwt-cpp.git /tmp/jwt-cpp && \
+    cp -r /tmp/jwt-cpp/include/jwt-cpp /usr/local/include/ && \
+    rm -rf /tmp/jwt-cpp
 
 # Set working directory
 WORKDIR /app
@@ -29,13 +28,18 @@ WORKDIR /app
 # Copy source code
 COPY . .
 
-# Create build directory
-RUN mkdir build && cd build && \
+# Create build directory and compile
+RUN rm -rf build && mkdir build && cd build && \
     cmake .. && \
     make
+
+# Copy entrypoint script
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Expose port
 EXPOSE 8080
 
-# Run the app (assuming DB is connected via docker-compose)
-CMD ["./build/api"]
+# Start with entrypoint script
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+CMD ["/app/build/api"]

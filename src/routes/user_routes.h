@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "third_party/httplib.h"
+#include "httplib.h"
 #include "../db/connection.h"
 #include "../utils/session_manager.h"
 

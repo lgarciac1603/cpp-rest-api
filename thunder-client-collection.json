@@ -1,0 +1,149 @@
+{
+  "version": "1.1",
+  "name": "CPP REST API Collection",
+  "requests": [
+    {
+      "id": "req-get-users",
+      "name": "Get Users",
+      "url": "{{baseURL}}/users",
+      "method": "GET",
+      "headers": [],
+      "body": {},
+      "note": "List all users"
+    },
+    {
+      "id": "req-create-user",
+      "name": "Create User",
+      "url": "{{baseURL}}/users",
+      "method": "POST",
+      "headers": [
+        { "key": "Content-Type", "value": "application/x-www-form-urlencoded" }
+      ],
+      "body": {
+        "mode": "urlencoded",
+        "urlencoded": [
+          { "key": "username", "value": "tc-user", "enabled": true },
+          { "key": "email", "value": "tc-user@example.com", "enabled": true },
+          { "key": "password", "value": "secret123", "enabled": true }
+        ]
+      },
+      "note": "Create a new user"
+    },
+    {
+      "id": "req-get-user-by-id",
+      "name": "Get User By ID",
+      "url": "{{baseURL}}/users/{{userId}}",
+      "method": "GET",
+      "headers": [],
+      "body": {},
+      "note": "Read one user by ID (set userId variable after creation)"
+    },
+    {
+      "id": "req-update-user",
+      "name": "Update User",
+      "url": "{{baseURL}}/users/{{userId}}",
+      "method": "PUT",
+      "headers": [
+        { "key": "Content-Type", "value": "application/x-www-form-urlencoded" }
+      ],
+      "body": {
+        "mode": "urlencoded",
+        "urlencoded": [
+          {
+            "key": "email",
+            "value": "tc-user-updated@example.com",
+            "enabled": true
+          }
+        ]
+      },
+      "note": "Update user email"
+    },
+    {
+      "id": "req-delete-user",
+      "name": "Delete User",
+      "url": "{{baseURL}}/users/{{userId}}",
+      "method": "DELETE",
+      "headers": [],
+      "body": {},
+      "note": "Delete user by ID"
+    },
+    {
+      "id": "req-login",
+      "name": "Login",
+      "url": "{{baseURL}}/sessions",
+      "method": "POST",
+      "headers": [
+        { "key": "Content-Type", "value": "application/x-www-form-urlencoded" }
+      ],
+      "body": {
+        "mode": "urlencoded",
+        "urlencoded": [
+          { "key": "email", "value": "tc-user@example.com", "enabled": true },
+          { "key": "password", "value": "secret123", "enabled": true }
+        ]
+      },
+      "note": "Obtain access_token and refresh_token (use response to set environment variables)."
+    },
+    {
+      "id": "req-get-me",
+      "name": "Get Me",
+      "url": "{{baseURL}}/me",
+      "method": "GET",
+      "headers": [
+        { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+      ],
+      "body": {},
+      "note": "Validate JWT on current user endpoint"
+    },
+    {
+      "id": "req-refresh-token",
+      "name": "Refresh Token",
+      "url": "{{baseURL}}/sessions/refresh",
+      "method": "POST",
+      "headers": [
+        { "key": "Content-Type", "value": "application/x-www-form-urlencoded" }
+      ],
+      "body": {
+        "mode": "urlencoded",
+        "urlencoded": [
+          {
+            "key": "refresh_token",
+            "value": "{{refreshToken}}",
+            "enabled": true
+          }
+        ]
+      },
+      "note": "Rotate and obtain new access token"
+    },
+    {
+      "id": "req-logout",
+      "name": "Logout",
+      "url": "{{baseURL}}/sessions",
+      "method": "DELETE",
+      "headers": [
+        { "key": "Content-Type", "value": "application/x-www-form-urlencoded" }
+      ],
+      "body": {
+        "mode": "urlencoded",
+        "urlencoded": [
+          {
+            "key": "refresh_token",
+            "value": "{{refreshToken}}",
+            "enabled": true
+          }
+        ]
+      },
+      "note": "Invalidate refresh token"
+    }
+  ],
+  "environment": {
+    "id": "env-local",
+    "name": "Local ",
+    "values": [
+      { "key": "baseURL", "value": "http://localhost:8080", "enabled": true },
+      { "key": "userId", "value": "1", "enabled": true },
+      { "key": "accessToken", "value": "", "enabled": true },
+      { "key": "refreshToken", "value": "", "enabled": true }
+    ]
+  }
+}
