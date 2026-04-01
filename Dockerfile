@@ -33,9 +33,26 @@ RUN rm -rf build && mkdir build && cd build && \
     cmake .. && \
     make
 
-# Copy entrypoint script
-COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+# Create entrypoint script
+RUN mkdir -p /usr/local/bin && \
+    echo '#!/bin/sh' > /usr/local/bin/docker-entrypoint.sh && \
+    echo 'set -e' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'echo "DB_HOST: $DB_HOST"' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'echo "DB_PORT: $DB_PORT"' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'echo "DB_USER: $DB_USER"' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'echo "DB_PASS: $DB_PASS"' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'echo "DB_NAME: $DB_NAME"' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'if [ -z "$DB_HOST" ] || [ -z "$DB_PORT" ] || [ -z "$DB_USER" ] || [ -z "$DB_NAME" ]; then' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '  echo "Missing DB env vars"' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo '  exit 1' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'fi' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'echo "Waiting for PostgreSQL..."' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'until pg_isready -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" > /dev/null 2>&1; do sleep 1; echo "."; done' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'echo "PostgreSQL ready. Running migrations..."' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'for sql in /app/database/migrations/*.sql; do echo "Applying: $sql"; PGPASSWORD="$DB_PASS" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -f "$sql"; done' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'echo "Migrations done. Starting API."' >> /usr/local/bin/docker-entrypoint.sh && \
+    echo 'exec "$@"' >> /usr/local/bin/docker-entrypoint.sh && \
+    chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Expose port
 EXPOSE 8080
