@@ -56,6 +56,18 @@ A simple and minimalist REST API built in C++ for managing users and sessions. I
 
      - The new migration `004-refresh-tokens.sql` adds the table for secure token storage.
 
+   - If you get `Missing DB env vars...`, do:
+     1. `docker-compose down -v` to clean old containers/volumes.
+     2. `docker-compose up --build`.
+     3. Verify with `docker-compose logs api --tail=50`; should show:
+        - `DB_HOST: postgres`
+        - `DB_PORT: 5432`
+        - `DB_USER: apiuser_test`
+        - `DB_PASS: apipass_test`
+        - `DB_NAME: apidb`
+
+   - Note: `docker-entrypoint.sh` checks for these vars before running migrations.
+
 2. **App Configuration**:
    - Edit `src/config/config.h` to adjust settings (e.g., server port, JWT secret).
    - The JWT secret is hardcoded in `auth_routes.cpp` as `"your-secret-key"` – change it in production.
