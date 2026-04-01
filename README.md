@@ -131,6 +131,8 @@ A simple and minimalist REST API built in C++ for managing users and sessions. I
 - `GET /users`: List all users (returns JSON).
 - `GET /users/{id}`: Get a user by ID.
 - `POST /users`: Create user (body: `username`, `email`, `password`).
+  - Returns `201 Created` on success.
+  - Returns `409 Conflict` if `username` or `email` already exists.
 - `PUT /users/{id}`: Update email (body: `email`).
 - `DELETE /users/{id}`: Delete user.
 

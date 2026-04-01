@@ -66,9 +66,21 @@ void register_user_routes(httplib::Server& api, DBConnection& db, SessionManager
 
     UserRepository repo(db.get());
 
+    if (repo.findByUsername(username)) {
+      res.status = 409;
+      res.set_content("{\"error\":\"username_already_exists\"}", "application/json");
+      return;
+    }
+
+    if (repo.findByEmail(email)) {
+      res.status = 409;
+      res.set_content("{\"error\":\"email_already_exists\"}", "application/json");
+      return;
+    }
+
     if (!repo.create(username, email, hashed)) {
-      res.status = 400;
-      res.set_content("{\"error\":\"User creation failed\"}", "application/json");
+      res.status = 500;
+      res.set_content("{\"error\":\"user_creation_failed\"}", "application/json");
       return;
     }
 
