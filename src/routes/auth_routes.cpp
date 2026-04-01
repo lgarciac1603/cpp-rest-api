@@ -4,6 +4,7 @@
 #include "../repositories/user_repository.h"
 #include "../repositories/refresh_token_repository.h"
 #include "../utils/hash.h"
+#include "../utils/cors.h"
 #define JWT_DISABLE_PICOJSON
 #include <nlohmann/json.hpp>
 #include <jwt-cpp/jwt.h>
@@ -51,6 +52,7 @@ void register_auth_routes(httplib::Server& api, DBConnection& db, SessionManager
 
   // POST /sessions (login)
   api.Post("/sessions", [&](const httplib::Request& req, httplib::Response& res) {
+    CORS::set_headers(res);
     auto email = req.get_param_value("email");
     auto password = req.get_param_value("password");
 
@@ -89,6 +91,7 @@ void register_auth_routes(httplib::Server& api, DBConnection& db, SessionManager
 
   // GET /me
   api.Get("/me", [&](const httplib::Request& req, httplib::Response& res) {
+    CORS::set_headers(res);
     auto auth_header = req.get_header_value("Authorization");
     if (auth_header.find("Bearer ") != 0) {
       res.status = 401;
@@ -121,6 +124,7 @@ void register_auth_routes(httplib::Server& api, DBConnection& db, SessionManager
 
   // DELETE /sessions (logout)
   api.Delete("/sessions", [&](const httplib::Request& req, httplib::Response& res) {
+    CORS::set_headers(res);
     auto refresh_token = req.get_param_value("refresh_token");
     if (refresh_token.empty()) {
       res.status = 400;
@@ -141,6 +145,7 @@ void register_auth_routes(httplib::Server& api, DBConnection& db, SessionManager
 
   // POST /sessions/refresh
   api.Post("/sessions/refresh", [&](const httplib::Request& req, httplib::Response& res) {
+    CORS::set_headers(res);
     auto refresh_token = req.get_param_value("refresh_token");
     if (refresh_token.empty()) {
       res.status = 400;

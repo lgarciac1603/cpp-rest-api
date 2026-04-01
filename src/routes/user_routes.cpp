@@ -3,6 +3,7 @@
 #include "user_routes.h"
 #include "../repositories/user_repository.h"
 #include "../utils/hash.h"
+#include "../utils/cors.h"
 
 using namespace std;
 
@@ -19,6 +20,7 @@ void register_user_routes(httplib::Server& api, DBConnection& db, SessionManager
   // get all users
   api.Get("/users", [&](const httplib::Request&, httplib::Response& res) {
     cout << "GET /users\n";
+    CORS::set_headers(res);
     UserRepository repo(db.get());
     auto users = repo.findAll();
 
@@ -37,6 +39,7 @@ void register_user_routes(httplib::Server& api, DBConnection& db, SessionManager
   // get one user by id
   api.Get(R"(/users/(\d+))", [&](const httplib::Request& req, httplib::Response& res) {
     cout << "GET /users/id\n";
+    CORS::set_headers(res);
     UserRepository repo(db.get());
 
     int id = stoi(req.matches[1]);
@@ -48,6 +51,7 @@ void register_user_routes(httplib::Server& api, DBConnection& db, SessionManager
   // post user
   api.Post("/users", [&](const httplib::Request& req, httplib::Response& res) {
     cout << "POST /users\n";
+    CORS::set_headers(res);
     auto username = req.get_param_value("username");
     auto email = req.get_param_value("email");
     auto pass = req.get_param_value("password");
@@ -75,6 +79,7 @@ void register_user_routes(httplib::Server& api, DBConnection& db, SessionManager
   // edit user with id
   api.Put(R"(/users/(\d+))", [&](const httplib::Request& req, httplib::Response& res) {
     cout << "put /users/id\n";
+    CORS::set_headers(res);
     int id = stoi(req.matches[1]);
     auto email = req.get_param_value("email");
 
@@ -87,6 +92,7 @@ void register_user_routes(httplib::Server& api, DBConnection& db, SessionManager
 
   api.Delete(R"(/users/(\d+))", [&](const httplib::Request& req, httplib::Response& res) {
     cout << "DELETE /users/id\n";
+    CORS::set_headers(res);
     int id = stoi(req.matches[1]);
 
     UserRepository repo(db.get());

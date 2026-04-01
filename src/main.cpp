@@ -7,6 +7,7 @@
 #include "routes/auth_routes.h"
 #include "utils/console-colors.h"
 #include "utils/session_manager.h"
+#include "utils/cors.h"
 
 using namespace std;
 
@@ -41,11 +42,14 @@ int main() {
     << "Test query OK"
     << COLOR_RESET << "\n";
 
-  // --- Servidor HTTP ---
+  // --- HTTP Server ---
   httplib::Server api;
   SessionManager session_mgr;
   register_user_routes(api, db, session_mgr);
   register_auth_routes(api, db, session_mgr);
+  
+  // Setup CORS
+  CORS::handle_preflight(api);
 
   cout << COLOR_GREEN
     << "API listening on http://localhost:8080"
