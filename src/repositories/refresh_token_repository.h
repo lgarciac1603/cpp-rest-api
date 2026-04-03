@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <string>
+#include <optional>
 #include <libpq-fe.h>
 #include "../models/refresh_token.h"
 
@@ -17,4 +18,5 @@ public:
   bool create(int user_id, const string& token_hash, time_t expires_at);
   bool removeByTokenHash(const string& token_hash);
   bool isValid(const string& token_hash);
+  optional<int> findUserIdByTokenHash(const string& token_hash);
 };

@@ -10,7 +10,11 @@ curl -X POST http://localhost:8080/users \
   -d "username=john&email=john@example.com&password=secret123"
 ```
 
-Expected response: JSON with new user object (id, username, email, etc.).
+Expected response:
+
+- Success: `201 Created` with `{"message":"User created"}`.
+- Username exists: `409 Conflict` with `{"error":"username_already_exists"}`.
+- Email exists: `409 Conflict` with `{"error":"email_already_exists"}`.
 
 ## 2. List all users
 
@@ -75,7 +79,9 @@ curl -X POST http://localhost:8080/sessions/refresh \
   -d "refresh_token=<refresh_token>"
 ```
 
-Expected response: JSON with a new `access_token`.
+Expected response: JSON with a new `access_token` and `expires_in`.
+
+- If token is invalid or expired: `401 Unauthorized` with `{"error":"invalid_refresh_token"}`.
 
 ### 9. Logout (invalidate refresh token)
 
@@ -85,7 +91,10 @@ curl -X DELETE http://localhost:8080/sessions \
   -d "refresh_token=<refresh_token>"
 ```
 
-Expected response: success status or message.
+Expected response:
+
+- Success: `204 No Content` (token invalidated).
+- Token invalid/already logged out: `401 Unauthorized` with `{"error":"invalid_refresh_token"}`.
 
 ## Notes
 

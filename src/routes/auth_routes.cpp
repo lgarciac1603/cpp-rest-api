@@ -3,7 +3,9 @@
 #include "auth_routes.h"
 #include "../repositories/user_repository.h"
 #include "../repositories/refresh_token_repository.h"
+#include "../config/config.h"
 #include "../utils/hash.h"
+#include "../utils/cors.h"
 #define JWT_DISABLE_PICOJSON
 #include <nlohmann/json.hpp>
 #include <jwt-cpp/jwt.h>
@@ -47,10 +49,11 @@ int get_user_id_from_token(const string& token, const string& secret) {
 }
 
 void register_auth_routes(httplib::Server& api, DBConnection& db, SessionManager& session_mgr) {
-  string jwt_secret = "your-secret-key";  // Mover a config
+  string jwt_secret = JWT_SECRET;
 
   // POST /sessions (login)
   api.Post("/sessions", [&](const httplib::Request& req, httplib::Response& res) {
+    CORS::set_headers(res);
     auto email = req.get_param_value("email");
     auto password = req.get_param_value("password");
 
@@ -70,7 +73,7 @@ void register_auth_routes(httplib::Server& api, DBConnection& db, SessionManager
 
     string access_token = generate_access_token(user->id, jwt_secret);
     string refresh_token_str = generate_refresh_token();
-    string refresh_hash = hash_password(refresh_token_str);  // Usar hash para almacenar
+    string refresh_hash = hash_refresh_token(refresh_token_str);
 
     time_t expires_at = time(nullptr) + 7 * 24 * 3600;  // 7 días
     RefreshTokenRepository token_repo(db.get());
@@ -89,6 +92,7 @@ void register_auth_routes(httplib::Server& api, DBConnection& db, SessionManager
 
   // GET /me
   api.Get("/me", [&](const httplib::Request& req, httplib::Response& res) {
+    CORS::set_headers(res);
     auto auth_header = req.get_header_value("Authorization");
     if (auth_header.find("Bearer ") != 0) {
       res.status = 401;
@@ -121,6 +125,7 @@ void register_auth_routes(httplib::Server& api, DBConnection& db, SessionManager
 
   // DELETE /sessions (logout)
   api.Delete("/sessions", [&](const httplib::Request& req, httplib::Response& res) {
+    CORS::set_headers(res);
     auto refresh_token = req.get_param_value("refresh_token");
     if (refresh_token.empty()) {
       res.status = 400;
@@ -128,11 +133,11 @@ void register_auth_routes(httplib::Server& api, DBConnection& db, SessionManager
       return;
     }
 
-    string refresh_hash = hash_password(refresh_token);
+    string refresh_hash = hash_refresh_token(refresh_token);
     RefreshTokenRepository token_repo(db.get());
     if (!token_repo.removeByTokenHash(refresh_hash)) {
-      res.status = 400;
-      res.set_content("{\"error\":\"invalid_token\"}", "application/json");
+      res.status = 401;
+      res.set_content("{\"error\":\"invalid_refresh_token\"}", "application/json");
       return;
     }
 
@@ -141,6 +146,7 @@ void register_auth_routes(httplib::Server& api, DBConnection& db, SessionManager
 
   // POST /sessions/refresh
   api.Post("/sessions/refresh", [&](const httplib::Request& req, httplib::Response& res) {
+    CORS::set_headers(res);
     auto refresh_token = req.get_param_value("refresh_token");
     if (refresh_token.empty()) {
       res.status = 400;
@@ -148,29 +154,16 @@ void register_auth_routes(httplib::Server& api, DBConnection& db, SessionManager
       return;
     }
 
-    string refresh_hash = hash_password(refresh_token);
+    string refresh_hash = hash_refresh_token(refresh_token);
     RefreshTokenRepository token_repo(db.get());
-    if (!token_repo.isValid(refresh_hash)) {
+    auto user_id = token_repo.findUserIdByTokenHash(refresh_hash);
+    if (!user_id) {
       res.status = 401;
       res.set_content("{\"error\":\"invalid_refresh_token\"}", "application/json");
       return;
     }
 
-    // Obtener user_id de la DB
-    ostringstream query;
-    query << "SELECT user_id FROM refresh_tokens WHERE token_hash = '" << refresh_hash << "'";
-    PGresult* pg_res = PQexec(db.get(), query.str().c_str());
-    if (PQresultStatus(pg_res) != PGRES_TUPLES_OK || PQntuples(pg_res) == 0) {
-      PQclear(pg_res);
-      res.status = 401;
-      res.set_content("{\"error\":\"invalid_refresh_token\"}", "application/json");
-      return;
-    }
-
-    int user_id = atoi(PQgetvalue(pg_res, 0, 0));
-    PQclear(pg_res);
-
-    string new_access_token = generate_access_token(user_id, jwt_secret);
+    string new_access_token = generate_access_token(*user_id, jwt_secret);
     ostringstream response;
     response << "{\"access_token\":\"" << new_access_token
       << "\",\"expires_in\":3600}";
