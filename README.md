@@ -2,12 +2,14 @@
 
 A simple and minimalist REST API built in C++ for managing users and sessions. It uses PostgreSQL as the database, httplib for the HTTP server, and JWT for authentication. Includes full authentication with login, logout, refresh tokens, and user sessions.
 
+> **Role in the stack**: This is the primary backend for [crypto-dashboard](https://github.com/lgarciac1603/crypto-dashboard). It can run standalone or alongside [favorites-api](https://github.com/lgarciac1603/favorites-api), an optional Go microservice that extends it with cryptocurrency favorites management. Both are orchestrated from `crypto-dashboard`.
+
 ## Features
 
 - **User CRUD**: Create, read, update, and delete users.
 - **JWT Authentication**: Login, logout, refresh tokens, and `/me` endpoint with secure token management.
 - **Database**: PostgreSQL with SQL migrations, including tables for users and refresh tokens.
-- **Containerization**: Docker Compose for PostgreSQL.
+- **Containerization**: Docker Compose for standalone or full-stack deployment.
 
 ## Prerequisites
 
@@ -80,6 +82,31 @@ A simple and minimalist REST API built in C++ for managing users and sessions. I
      environment:
        - CORS_ALLOW_ORIGIN=http://localhost:5173
      ```
+
+## Deployment Modes
+
+This service supports two deployment modes:
+
+### Standalone
+
+Run `cpp-rest-api` independently with its own PostgreSQL instance. Useful for development or when you only need user/session management without favorites.
+
+```bash
+# From the cpp-rest-api/ directory
+docker compose up --build
+```
+
+- API available at `http://localhost:8080`
+- PostgreSQL available at `localhost:5432`
+- Migrations are applied automatically by the container entrypoint
+
+### Full Stack (via crypto-dashboard)
+
+When deployed as part of the full stack, `cpp-rest-api` is orchestrated by `crypto-dashboard`'s `docker-compose.yml`. In this mode it shares a single PostgreSQL instance with `favorites-api` and both run on the same Docker network (`app-network`), enabling `favorites-api` to reach this service at `http://cpp-rest-api:8080` for token validation.
+
+See the [crypto-dashboard repository](https://github.com/lgarciac1603/crypto-dashboard) for full setup instructions.
+
+---
 
 ## Compilation
 
