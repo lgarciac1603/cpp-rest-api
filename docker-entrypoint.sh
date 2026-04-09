@@ -9,7 +9,7 @@ echo "DB_PASS: $DB_PASS"
 echo "DB_NAME: $DB_NAME"
 
 # Wait for Postgres to be ready
-if [ -z "$DB_HOST" ] || [ -z "$DB_PORT" ] || [ -z "$DB_USER" ] || [ -z "$DB_NAME" ]; then
+if [ -z "$DB_HOST" ] || [ -z "$DB_PORT" ] || [ -z "$DB_USER" ] || [ -z "$DB_NAME" ] || [ -z "$DB_PASS" ]; then
   echo "Missing DB env vars, ensure DB_HOST, DB_PORT, DB_USER, DB_NAME are set."
   exit 1
 fi

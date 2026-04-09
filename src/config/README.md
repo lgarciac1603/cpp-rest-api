@@ -1,61 +1,132 @@
 # Configuration Files
 
-This directory contains configuration files for database connection settings.
+This directory contains the configuration headers for `cpp-rest-api`. There are two files with distinct purposes:
 
-## config.h
+| File | Purpose |
+|---|---|
+| `config.h` | **Runtime config** — reads values from environment variables with safe defaults. Used by the application in all modes. |
+| `config.local.h` | **Local dev template** — hardcoded values for compiling and running natively without environment variables. |
 
-The main configuration file that uses environment variables with fallback defaults.
+---
 
-It defines macros that read from environment variables:
+## `config.h` — Runtime (environment variables)
 
-- `DB_HOST`: Database host (default: "localhost")
-- `DB_PORT`: Database port (default: "5432")
-- `DB_NAME`: Database name (default: "apidb")
-- `DB_USER`: Database user (default: "apiuser_test")
-- `DB_PASS`: Database password (default: "apipass_test")
+This is the file `#include`d by the application. It defines macros that resolve at runtime by reading environment variables, falling back to defaults if a variable is not set.
 
-### Usage with Environment Variables (Recommended)
+### Variables
 
-Set environment variables before running the app:
+| Macro | Env Variable | Default | Description |
+|---|---|---|---|
+| `DB_HOST` | `DB_HOST` | `localhost` | PostgreSQL host |
+| `DB_PORT` | `DB_PORT` | `5432` | PostgreSQL port |
+| `DB_NAME` | `DB_NAME` | `apidb` | Database name |
+| `DB_USER` | `DB_USER` | `apiuser_test` | Database user |
+| `DB_PASS` | `DB_PASS` | `apipass_test` | Database password |
+| `APP_PORT` | `APP_PORT` | `8080` | HTTP port the API listens on |
+| `JWT_SECRET` | `JWT_SECRET` | `dev-secret-key` | Secret for signing/verifying JWT tokens |
+| `CORS_ALLOW_ORIGIN` | `CORS_ALLOW_ORIGIN` | `http://localhost:4200` | Allowed CORS origin |
+
+> ⚠️ The defaults are safe for local development only. **Always override `JWT_SECRET` and `DB_PASS` in any non-local environment.**
+
+---
+
+### Standalone mode
+
+When running `cpp-rest-api` on its own (Docker Compose from this project's root):
 
 ```bash
-export DB_HOST="your-host"
-export DB_PORT="5432"
-export DB_NAME="your-db"
-export DB_USER="your-user"
-export DB_PASS="your-password"
-./api.exe
+docker compose up --build
 ```
 
-Or in Docker Compose (as in the root docker-compose.yml):
+The `docker-compose.yml` already injects all required variables. No changes to `config.h` are needed.
+
+To customize, edit the `environment` block in `docker-compose.yml`:
 
 ```yaml
 environment:
   - DB_HOST=postgres
   - DB_PORT=5432
+  - DB_NAME=apidb
   - DB_USER=apiuser_test
   - DB_PASS=apipass_test
-  - DB_NAME=apidb
+  - APP_PORT=8080
+  - JWT_SECRET=your-secret-here
+  - CORS_ALLOW_ORIGIN=http://localhost:4200
 ```
 
-### Hardcoded Values (Alternative)
+Or export them in your shell before running the binary directly:
 
-If you prefer hardcoded values, edit `config.h` directly:
-
-```cpp
-#define DB_HOST "your-host"
-#define DB_PORT "5432"
-#define DB_NAME "your-db"
-#define DB_USER "your-user"
-#define DB_PASS "your-password"
+```bash
+export DB_HOST=localhost
+export DB_PORT=5432
+export DB_NAME=apidb
+export DB_USER=apiuser_test
+export DB_PASS=apipass_test
+export APP_PORT=8080
+export JWT_SECRET=your-secret-here
+export CORS_ALLOW_ORIGIN=http://localhost:4200
+./build/api
 ```
 
-## config.local.h
+---
 
-An example file with hardcoded defaults (DB_USER and DB_PASS are empty).
+### Full stack mode (via crypto-dashboard)
 
-You can copy this to `config.h` and modify as needed, but `config.h` already supports env vars.
+When orchestrated from `crypto-dashboard`, all variables are injected by that project's `docker-compose.yml`. The values for `JWT_SECRET` and `CORS_ALLOW_ORIGIN` can be overridden by placing a `.env` file in the `crypto-dashboard/` root:
 
-## Docker Compose
+```env
+# crypto-dashboard/.env
+JWT_SECRET=your-production-secret
+CORS_ALLOW_ORIGIN=http://localhost:4200
+```
 
-The root `docker-compose.yml` sets up a test PostgreSQL instance with these defaults, so no changes needed for local development.
+`DB_*` values are fixed to the shared internal PostgreSQL service and should not be changed unless you modify the full-stack compose as well.
+
+---
+
+## `config.local.h` — Compile-time hardcoded values
+
+This file is a template for **native local development** (compiling and running without Docker). It uses hardcoded `#define` macros evaluated at compile time — no environment variables are read.
+
+### When to use it
+
+Use `config.local.h` when:
+- You are building and running the binary natively (e.g. with `g++` or Visual Studio) and do not want to manage environment variables.
+- You are connecting to a local PostgreSQL instance that is already running.
+
+### How to use it
+
+1. Copy `config.local.h` to `config.h` (or rename it):
+
+   ```bash
+   cp src/config/config.local.h src/config/config.h
+   ```
+
+2. Fill in your values:
+
+   ```cpp
+   #pragma once
+
+   #define DB_HOST "localhost"
+   #define DB_PORT "5432"
+   #define DB_NAME "apidb"
+   #define DB_USER "your_pg_user"      // ← fill this
+   #define DB_PASS "your_pg_password"  // ← fill this
+   #define APP_PORT "8080"
+   #define JWT_SECRET "your-secret"    // ← fill this
+   #define CORS_ALLOW_ORIGIN "http://localhost:4200"
+   ```
+
+3. Rebuild the project.
+
+> ⚠️ `config.local.h` is git-ignored. Never commit credentials to source control.
+
+---
+
+## Summary
+
+| Scenario | File to use | How |
+|---|---|---|
+| Docker (standalone) | `config.h` | Set env vars in `docker-compose.yml` |
+| Docker (full stack) | `config.h` | Managed by `crypto-dashboard/docker-compose.yml` |
+| Native build (local) | `config.local.h` → copy to `config.h` | Hardcode values directly in the file |
