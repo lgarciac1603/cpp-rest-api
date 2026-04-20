@@ -1,11 +1,12 @@
 # Configuration Files
 
-This directory contains the configuration headers for `cpp-rest-api`. There are two files with distinct purposes:
+This directory contains the configuration headers for `cpp-rest-api`. There are now three relevant files with distinct purposes:
 
 | File | Purpose |
 |---|---|
 | `config.h` | **Runtime config** — reads values from environment variables with safe defaults. Used by the application in all modes. |
-| `config.local.h` | **Local dev template** — hardcoded values for compiling and running natively without environment variables. |
+| `config.local.h` | **Local private file** — your machine-specific values for compiling and running natively without environment variables. Keep it local and do not commit it. |
+| `config.example.h` | **Example template** — committed sample showing the shape of a valid local config. Copy this when you need to create your own `config.local.h`. |
 
 ---
 
@@ -84,9 +85,11 @@ CORS_ALLOW_ORIGIN=http://localhost:4200
 
 ---
 
-## `config.local.h` — Compile-time hardcoded values
+## `config.local.h` — Compile-time local values
 
-This file is a template for **native local development** (compiling and running without Docker). It uses hardcoded `#define` macros evaluated at compile time — no environment variables are read.
+This file is intended for **native local development** (compiling and running without Docker). It uses hardcoded `#define` macros evaluated at compile time — no environment variables are read.
+
+Unlike `config.example.h`, this file is meant to contain **your own local values** and should stay out of source control.
 
 ### When to use it
 
@@ -96,30 +99,50 @@ Use `config.local.h` when:
 
 ### How to use it
 
-1. Copy `config.local.h` to `config.h` (or rename it):
+1. Start from the committed example:
 
    ```bash
-   cp src/config/config.local.h src/config/config.h
+   cp src/config/config.example.h src/config/config.local.h
    ```
 
-2. Fill in your values:
+2. Fill in your local values in `config.local.h`:
 
    ```cpp
    #pragma once
 
    #define DB_HOST "localhost"
    #define DB_PORT "5432"
-   #define DB_NAME "apidb"
-   #define DB_USER "your_pg_user"      // ← fill this
-   #define DB_PASS "your_pg_password"  // ← fill this
+   #define DB_NAME "your_db_name"
+   #define DB_USER "your_pg_user"
+   #define DB_PASS "your_pg_password"
    #define APP_PORT "8080"
-   #define JWT_SECRET "your-secret"    // ← fill this
+   #define JWT_SECRET "your-secret"
    #define CORS_ALLOW_ORIGIN "http://localhost:4200"
    ```
 
-3. Rebuild the project.
+3. Make sure your native build includes `config.local.h` as intended by your local workflow.
+
+4. Rebuild the project.
 
 > ⚠️ `config.local.h` is git-ignored. Never commit credentials to source control.
+
+---
+
+## `config.example.h` — Committed example
+
+This file exists to show the expected format of a valid local config without treating those example values as real credentials for your machine.
+
+### When to use it
+
+Use `config.example.h` when:
+- You need a starting point to create `config.local.h`.
+- You want to understand which macros must exist for a native local build.
+
+### Typical workflow
+
+1. Copy `config.example.h` to `config.local.h`.
+2. Replace the example values with your own local values.
+3. Keep `config.local.h` uncommitted.
 
 ---
 
@@ -129,4 +152,4 @@ Use `config.local.h` when:
 |---|---|---|
 | Docker (standalone) | `config.h` | Set env vars in `docker-compose.yml` |
 | Docker (full stack) | `config.h` | Managed by `crypto-dashboard/docker-compose.yml` |
-| Native build (local) | `config.local.h` → copy to `config.h` | Hardcode values directly in the file |
+| Native build (local) | `config.local.h` | Start from `config.example.h`, then fill your own local values |
