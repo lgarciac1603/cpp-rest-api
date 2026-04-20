@@ -33,6 +33,7 @@
 
 # configurations and other files
 src/config/config.h
+src/config/config.local.h
 /build
 .vscode/
 .vscode/*
