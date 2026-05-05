@@ -33,7 +33,8 @@ A simple and minimalist REST API built in C++ for managing users and sessions. I
    ```
 
 2. **Install dependencies with vcpkg** (recommended):
-   - Install vcpkg if you don't have it: `git clone https://github.com/Microsoft/vcpkg.git && cd vcpkg && bootstrap-vcpkg.bat`.
+   _Note: You will need a valid install of Visual Studio to install this packages with C++ desktop work load_
+   - Install vcpkg if you don't have it: `git clone https://github.com/Microsoft/vcpkg.git && cd vcpkg && .\bootstrap-vcpkg.bat`.
    - Install packages: `.\vcpkg install libpq openssl`.
    - Integrate vcpkg: `.\vcpkg integrate install`.
 
